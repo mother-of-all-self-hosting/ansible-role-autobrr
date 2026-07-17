@@ -34,7 +34,7 @@ provisioner:
         # Variables for Autobrr
         autobrr_uid: 1000
         autobrr_gid: 1000
-        autobrr_hostname: autobrr
+        autobrr_hostname: localhost
         autobrr_container_labels_traefik_enabled: false
         autobrr_container_http_bind_port: 7474
   env:
