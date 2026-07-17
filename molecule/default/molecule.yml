@@ -28,6 +28,10 @@ provisioner:
   inventory:
     group_vars:
       all:
+        # Helper variables
+        autobrr_debug_service_enabled: false
+
+        # Variables for Autobrr
         autobrr_uid: 1000
         autobrr_gid: 1000
         autobrr_hostname: autobrr
