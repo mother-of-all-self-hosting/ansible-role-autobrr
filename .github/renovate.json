@@ -32,10 +32,7 @@
       "automerge": true,
       "automergeType": "branch",
       "ignoreUnstable": false,
-      "versioning": "loose",
-      "matchSourceUrls": [
-        "https://github.com{/,}**"
-      ]
+      "versioning": "loose"
     }
   ],
   "customManagers": [
