@@ -586,7 +586,13 @@
             connection = sqlite3.connect(database_path)
 
             def scalar(query, *parameters):
-                row = connection.execute(query, parameters).fetchone()
+                # A wrong path would hand sqlite3 an empty database rather than
+                # an error, so a missing table has to read as a missing value
+                # and let the assertion that follows be the thing that fails.
+                try:
+                    row = connection.execute(query, parameters).fetchone()
+                except sqlite3.OperationalError:
+                    return 'MISSING'
                 return 'MISSING' if row is None else str(row[0])
 
             print(json.dumps({

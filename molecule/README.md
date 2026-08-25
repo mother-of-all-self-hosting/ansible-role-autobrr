@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2018-2025 Slavi Pantaleev
+SPDX-FileCopyrightText: 2018-2026 Slavi Pantaleev
 SPDX-FileCopyrightText: 2019-2022 Aaron Raimist
 SPDX-FileCopyrightText: 2019-2023 MDAD project contributors
 SPDX-FileCopyrightText: 2023 QEDeD
@@ -43,11 +43,25 @@ pip3 install -r ./molecule/requirements.txt
 
 ## Scenarios
 
-Currently there is one testing scenario available.
+There are two testing scenarios available.
 
 ### `default`
 
-Tests a standard Autobrr installation.
+Tests a standard Autobrr installation, and is where the substance of the suite lives.
+
+It first runs the same container image with none of the role's configuration, to establish what an Autobrr that nobody configured chooses for itself — it starts happily, migrates a database and serves the same web UI, so nothing else in the scenario is allowed to rest on Autobrr merely answering. The scenario then checks that:
+
+- the readiness endpoint, which pings Autobrr's database, answers — rather than only that the systemd unit reads `active`, which `Restart=always` makes true for a crash-looping container as well;
+- unauthenticated calls and forged sessions are refused (403), forged API tokens are refused (401), and an invented path is a 404 rather than the single-page-application shell that would make a 200 unfalsifiable;
+- a freshly installed Autobrr can still be claimed by an unauthenticated onboarding call (204), and refuses further ones (503) once it has been;
+- the running process reports the version `autobrr_version` pins, matching the image tag and the image's OCI version label;
+- the port, log level, update-check setting and timezone Autobrr is running with are the ones the role rendered into its env file — all of them deliberately different from what Autobrr picks for itself;
+- a filter created over the API reads back by id, does not read back under an id nothing created, reads back through an API key Autobrr issued, and exists as a row in the SQLite file at the host path the role bind-mounts;
+- the service does not restart during a window longer than the unit's `RestartSec`.
+
+### `uninstall`
+
+Installs Autobrr, lets it write its database, and then runs the role again with `autobrr_enabled: false` — the uninstallation path that the `default` scenario never touches. It checks that the systemd unit, its service file, the rendered `env` and `labels` files, the container and the container network are all gone, and that the operator's data is not.
 
 ## Running
 
@@ -55,6 +69,7 @@ By default it is configured to run the scenarios on Ubuntu 26.04.
 
 ```bash
 molecule test --scenario-name default
+molecule test --scenario-name uninstall
 ```
 
 You can utilize other distributions by setting one to the `MOLECULE_DISTRO` environment variable:

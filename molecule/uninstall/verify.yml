@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Verify that Autobrr uninstalled itself
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    # Everything below is about things being gone, and "gone" is the state an
+    # empty machine is in too. This is what says the machine was not empty: the
+    # database Autobrr wrote while it was running is still here, which is both
+    # the evidence that the installation happened and the deliberate behavior
+    # the role documents - it removes the service, never the operator's data.
+    - name: Look for the database Autobrr wrote while it was installed
+      ansible.builtin.stat:
+        path: "{{ autobrr_molecule_data_path }}/autobrr.db"
+      register: autobrr_database
+
+    - name: Assert the operator's data survived the uninstallation
+      ansible.builtin.assert:
+        that:
+          - autobrr_database.stat.exists
+          - autobrr_database.stat.size > 0
+        fail_msg: >-
+          {{ autobrr_molecule_data_path }}/autobrr.db is gone, so either Autobrr was never
+          installed here - which would make every check below vacuous - or the
+          uninstallation deleted data it promises to leave alone
+        success_msg: >-
+          {{ autobrr_molecule_data_path }}/autobrr.db is still here
+          ({{ autobrr_database.stat.size }} bytes), so Autobrr really was installed and the
+          uninstallation left the operator's data where it was
+
+    - name: Look for the Autobrr systemd service file
+      ansible.builtin.stat:
+        path: "{{ autobrr_molecule_systemd_path }}/autobrr.service"
+      register: autobrr_service_file
+
+    - name: Look for the Autobrr support files
+      ansible.builtin.stat:
+        path: "{{ autobrr_molecule_base_path }}/{{ item }}"
+      register: autobrr_support_files
+      loop:
+        - env
+        - labels
+
+    - name: Ask systemd about the Autobrr unit
+      ansible.builtin.command:
+        cmd: systemctl is-active autobrr.service
+      register: autobrr_is_active
+      changed_when: false
+      failed_when: false
+
+    - name: Ask Docker about the Autobrr container
+      ansible.builtin.command:
+        cmd: docker ps --all --quiet --filter name=^{{ autobrr_molecule_container }}$
+      register: autobrr_container
+      changed_when: false
+
+    - name: Ask Docker about the Autobrr network
+      ansible.builtin.command:
+        cmd: docker network ls --quiet --filter name=^{{ autobrr_molecule_network }}$
+      register: autobrr_network
+      changed_when: false
+
+    - name: Assert Autobrr removed itself completely
+      ansible.builtin.assert:
+        that:
+          - not autobrr_service_file.stat.exists
+          - autobrr_support_files.results | rejectattr('stat.exists') | list | length == 2
+          - autobrr_is_active.stdout | trim in ['inactive', 'unknown', 'failed']
+          - autobrr_container.stdout | trim | length == 0
+          - autobrr_network.stdout | trim | length == 0
+        fail_msg: >-
+          Something Autobrr installed is still here: service file
+          {{ 'present' if autobrr_service_file.stat.exists else 'gone' }}, support files
+          {{ autobrr_support_files.results | selectattr('stat.exists') | map(attribute='item') | list }},
+          unit {{ autobrr_is_active.stdout | trim }},
+          container "{{ autobrr_container.stdout | trim }}",
+          network "{{ autobrr_network.stdout | trim }}"
+        success_msg: >-
+          The systemd unit ({{ autobrr_is_active.stdout | trim }}), its service file, the
+          rendered env and labels files, the container and the container network are all
+          gone
+
+    - name: Show the Autobrr uninstallation summary
+      ansible.builtin.debug:
+        msg:
+          - "unit: {{ autobrr_is_active.stdout | trim }}"
+          - "service file: {{ 'present' if autobrr_service_file.stat.exists else 'gone' }}"
+          - "container: {{ autobrr_container.stdout | trim | default('gone', true) }}"
+          - "network: {{ autobrr_network.stdout | trim | default('gone', true) }}"
+          - "data kept: {{ autobrr_molecule_data_path }}/autobrr.db, {{ autobrr_database.stat.size }} bytes"
