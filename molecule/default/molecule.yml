@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2026 spatterlight
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
@@ -11,6 +12,8 @@ dependency:
 driver:
   name: docker
 platforms:
+  # The name carries both the role and the scenario, so that scenarios running
+  # in parallel cannot collide on it.
   - name: autobrr-${MOLECULE_DISTRO:-ubuntu2604}-default
     image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2604}-ansible:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
@@ -19,8 +22,10 @@ platforms:
     cgroupns_mode: host
     privileged: true
     pre_build_image: true
-    published_ports:
-      - 127.0.0.1:7474:7474
+    # Deliberately no published ports. Everything the verification talks to is
+    # reached from inside this container, which is where the role's own port
+    # binding puts it, and publishing it onwards would stop two scenarios from
+    # running on one machine at the same time.
 provisioner:
   name: ansible
   config_options:
@@ -32,12 +37,45 @@ provisioner:
         # Helper variables
         autobrr_debug_service_enabled: false
 
+        # The container, network and paths the role derives from its identifier.
+        # Role defaults are not in scope in a verify play, so they are spelled out.
+        autobrr_molecule_container: autobrr
+        autobrr_molecule_network: autobrr
+        autobrr_molecule_base_path: /autobrr
+        autobrr_molecule_data_path: /autobrr/data
+
+        # The account the verification creates through Autobrr's onboarding
+        # endpoint and then logs in with.
+        autobrr_molecule_admin_username: molecule-admin
+        autobrr_molecule_admin_password: molecule-admin-password
+
         # Variables for Autobrr
         autobrr_uid: 1000
         autobrr_gid: 1000
         autobrr_hostname: localhost
         autobrr_container_labels_traefik_enabled: false
-        autobrr_container_http_bind_port: 7474
+
+        # Deliberately not Autobrr's own default of 7474. Autobrr takes its
+        # listen port from the config.toml it writes for itself unless
+        # AUTOBRR__PORT says otherwise, and only the role's rendered env file
+        # says otherwise - so an Autobrr answering here at all is evidence that
+        # the env file reached the process.
+        autobrr_container_http_port: 7654
+        autobrr_container_http_bind_port: 127.0.0.1:7654
+
+        # Deliberately not the role's default of Etc/UTC. Autobrr timestamps its
+        # own log lines in local time, so this becomes an observable difference
+        # in the journal rather than a value that merely sits in a file.
+        autobrr_timezone: Europe/Sofia
+
+        # Passed through to the container verbatim by the role. Autobrr's own
+        # defaults for both are the opposite (INFO, and update checks on), which
+        # is what makes them usable as evidence that the pass-through works.
+        # Turning the update check off also keeps the scenario from depending on
+        # Autobrr being able to reach the internet.
+        autobrr_environment_variables_additional_variables: |
+          AUTOBRR__LOG_LEVEL=DEBUG
+          AUTOBRR__CHECK_FOR_UPDATES=false
   env:
     # Workaround for https://github.com/ansible/molecule/issues/4391
     ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles
