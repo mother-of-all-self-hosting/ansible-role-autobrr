@@ -86,7 +86,7 @@
 
     - name: Read the Autobrr container the role created
       ansible.builtin.command:
-        cmd: "docker inspect {{ autobrr_molecule_container }}"
+        cmd: "docker container inspect {{ autobrr_molecule_container }}"
       register: autobrr_container_raw
       changed_when: false
 
@@ -94,7 +94,7 @@
       ansible.builtin.assert:
         that: (autobrr_container_raw.stdout | from_json) | length == 1
         fail_msg: >-
-          `docker inspect {{ autobrr_molecule_container }}` described
+          `docker container inspect {{ autobrr_molecule_container }}` described
           {{ (autobrr_container_raw.stdout | from_json) | length }} containers, so the
           role's container is not there to be read
         success_msg: "The role's {{ autobrr_molecule_container }} container is there"
