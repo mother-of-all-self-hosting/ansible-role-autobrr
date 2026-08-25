@@ -41,11 +41,63 @@
         file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
         name: autobrr_defaults
 
+    # ------------------------------------------------------------------
+    # The unit is up and Autobrr itself is ready
+    # ------------------------------------------------------------------
+
+    - name: Wait for the Autobrr systemd service to become active (up to 180s)
+      ansible.builtin.systemd_service:
+        name: autobrr.service
+      register: autobrr_service
+      until: autobrr_service.status.ActiveState == 'active'
+      retries: 36
+      delay: 5
+
+    - name: Assert the Autobrr systemd service is active
+      ansible.builtin.assert:
+        that: autobrr_service.status.ActiveState == 'active'
+        fail_msg: "autobrr.service is not active ({{ autobrr_service.status.ActiveState }})"
+        success_msg: "autobrr.service is active"
+
+    - name: Retrieve the Autobrr service log for debugging
+      when: autobrr_debug_service_enabled | bool
+      ansible.builtin.command:
+        cmd: journalctl -xeu autobrr.service
+      changed_when: false
+
+    # `active` only says a docker client is running. Autobrr's readiness probe
+    # pings its database, so this is the first answer that means the process
+    # behind the unit has migrated its schema and opened its listener.
+    - name: Wait for Autobrr to report itself ready (up to 5m)
+      ansible.builtin.uri:
+        url: "{{ autobrr_verify_url }}/api/healthz/readiness"
+        status_code: [200]
+        return_content: true
+      register: autobrr_readiness
+      until: autobrr_readiness.status | default(0) == 200
+      retries: 60
+      delay: 5
+
+    - name: Assert Autobrr reports itself ready
+      ansible.builtin.assert:
+        that: autobrr_readiness.content | trim == 'OK'
+        fail_msg: "Autobrr's readiness probe answered {{ autobrr_readiness.content | default('nothing') }}"
+        success_msg: "Autobrr's readiness probe reaches its database and answers OK"
+
     - name: Read the Autobrr container the role created
       ansible.builtin.command:
         cmd: "docker inspect {{ autobrr_molecule_container }}"
       register: autobrr_container_raw
       changed_when: false
+
+    - name: Assert exactly one Autobrr container is there to inspect
+      ansible.builtin.assert:
+        that: (autobrr_container_raw.stdout | from_json) | length == 1
+        fail_msg: >-
+          `docker inspect {{ autobrr_molecule_container }}` described
+          {{ (autobrr_container_raw.stdout | from_json) | length }} containers, so the
+          role's container is not there to be read
+        success_msg: "The role's {{ autobrr_molecule_container }} container is there"
 
     - name: Make sense of the Autobrr container
       ansible.builtin.set_fact:
@@ -65,6 +117,7 @@
     # The negative control: the same image, without the role's doing
     # ------------------------------------------------------------------
 
+    # With the role's Autobrr answering, this is what says the answers mean anything.
     # Autobrr is not an application that falls over when it is unconfigured. Left
     # entirely alone it writes itself a config.toml, migrates a fresh SQLite file
     # and serves a web UI indistinguishable from the role's - so "Autobrr answers"
@@ -155,49 +208,6 @@
           ansible.builtin.command:
             cmd: "docker rm --force {{ autobrr_verify_stock_container }}"
           changed_when: true
-
-    # ------------------------------------------------------------------
-    # The unit is up and Autobrr itself is ready
-    # ------------------------------------------------------------------
-
-    - name: Wait for the Autobrr systemd service to become active (up to 180s)
-      ansible.builtin.systemd_service:
-        name: autobrr.service
-      register: autobrr_service
-      until: autobrr_service.status.ActiveState == 'active'
-      retries: 36
-      delay: 5
-
-    - name: Assert the Autobrr systemd service is active
-      ansible.builtin.assert:
-        that: autobrr_service.status.ActiveState == 'active'
-        fail_msg: "autobrr.service is not active ({{ autobrr_service.status.ActiveState }})"
-        success_msg: "autobrr.service is active"
-
-    - name: Retrieve the Autobrr service log for debugging
-      when: autobrr_debug_service_enabled | bool
-      ansible.builtin.command:
-        cmd: journalctl -xeu autobrr.service
-      changed_when: false
-
-    # `active` only says a docker client is running. Autobrr's readiness probe
-    # pings its database, so this is the first answer that means the process
-    # behind the unit has migrated its schema and opened its listener.
-    - name: Wait for Autobrr to report itself ready (up to 5m)
-      ansible.builtin.uri:
-        url: "{{ autobrr_verify_url }}/api/healthz/readiness"
-        status_code: [200]
-        return_content: true
-      register: autobrr_readiness
-      until: autobrr_readiness.status | default(0) == 200
-      retries: 60
-      delay: 5
-
-    - name: Assert Autobrr reports itself ready
-      ansible.builtin.assert:
-        that: autobrr_readiness.content | trim == 'OK'
-        fail_msg: "Autobrr's readiness probe answered {{ autobrr_readiness.content | default('nothing') }}"
-        success_msg: "Autobrr's readiness probe reaches its database and answers OK"
 
     # ------------------------------------------------------------------
     # Everything without a credential is turned away
