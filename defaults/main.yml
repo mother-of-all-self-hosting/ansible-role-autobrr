@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2023, 2024 Nikita Chernyi
-# SPDX-FileCopyrightText: 2023-2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2023-2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2024 Sergio Durigan Junior
 # SPDX-FileCopyrightText: 2025 MASH project contributors
 # SPDX-FileCopyrightText: 2025 spatterlight
@@ -63,7 +63,12 @@ autobrr_systemd_wanted_services_list_default: []
 autobrr_systemd_wanted_services_list_auto: []
 autobrr_systemd_wanted_services_list_custom: []
 
-# The port Autobrr is running on inside the container
+# The port Autobrr listens on inside the container.
+#
+# It is handed to Autobrr as `AUTOBRR__PORT` (see `../templates/env.j2`), which overrides
+# the `port` value in the config.toml that Autobrr generates for itself on first start.
+# Changing this value therefore moves Autobrr's own listener, not merely the port
+# that the published port mapping and the Traefik service label point at.
 autobrr_container_http_port: 7474
 
 # Controls whether the container exposes the HTTP port
