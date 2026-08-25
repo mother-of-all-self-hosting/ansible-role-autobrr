@@ -3,7 +3,7 @@ galaxy_info:
   author: spatterlight
   company: spatterlight
   role_name: autobrr
-  namespace: spatterlight
+  namespace: mash
   description: An Ansible role for installing Autobrr, a easy to use download automater for torrents and usenet
   platforms:
     - name: Debian
