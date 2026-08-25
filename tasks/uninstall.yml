@@ -40,13 +40,6 @@
       changed_when: autobrr_data_path_deletion_result.rc == 0
       failed_when: false
 
-    - name: Ensure Autobrr local media path does not exist if empty
-      ansible.builtin.command:
-        cmd: "rmdir {{ autobrr_media_path }}"
-      register: autobrr_media_path_deletion_result
-      changed_when: autobrr_media_path_deletion_result.rc == 0
-      failed_when: false
-
     - name: Ensure Autobrr base path does not exist if empty
       ansible.builtin.command:
         cmd: "rmdir {{ autobrr_base_path }}"
