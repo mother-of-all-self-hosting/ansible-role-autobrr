@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2020 Chris van Dijk
 SPDX-FileCopyrightText: 2020 Dominik Zajac
 SPDX-FileCopyrightText: 2020 Mickaël Cornière
 SPDX-FileCopyrightText: 2020-2024 MDAD project contributors
-SPDX-FileCopyrightText: 2020-2024 Slavi Pantaleev
+SPDX-FileCopyrightText: 2020-2026 Slavi Pantaleev
 SPDX-FileCopyrightText: 2022 François Darveau
 SPDX-FileCopyrightText: 2022 Julian Foad
 SPDX-FileCopyrightText: 2022 Warren Bailey
@@ -77,6 +77,25 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 ## Usage
 
 After running the command for installation, Autobrr becomes available at the specified hostname like `https://example.com`. To use it, open the URL on the browser and create an account.
+
+### Create the first account promptly
+
+Autobrr has no default credentials. Instead, a freshly installed instance is in an *onboarding* state: it accepts an unauthenticated `POST /api/auth/onboard` call from anybody who can reach it, and whoever makes that call first becomes the administrator. Autobrr closes onboarding as soon as one account exists (`GET /api/auth/onboard` answers `204 No Content` while it is open and `503 Service Unavailable` once it is not).
+
+Because this role publishes Autobrr on a public hostname, the window between installing it and creating your account is a window in which a stranger can claim the instance. Create your account immediately after installing, and do not leave an un-onboarded instance running overnight.
+
+If you would rather not race anybody, you can create the account on the server before the service is ever reachable, using the `autobrrctl` program that ships inside the same container image. Run it on the server after `just install-service/autobrr` (or `--tags=setup-autobrr`) but before starting the service — it works directly against the database, so Autobrr does not need to be running:
+
+```sh
+docker run --rm -i \
+  --user=1000:1000 \
+  --entrypoint=autobrrctl \
+  --mount type=bind,src=/mash/autobrr/data,dst=/config \
+  ghcr.io/autobrr/autobrr:v1.84.0 \
+  --config /config create-user YOUR_USERNAME
+```
+
+The program reads the password from standard input (twice, as a confirmation). The `--entrypoint` is required, because the image's own entrypoint is the Autobrr server. Adjust the image tag, the user/group and the source path to match `autobrr_version`, `autobrr_uid`/`autobrr_gid` and `autobrr_data_path` as your playbook sets them. Afterwards, `GET /api/auth/onboard` answers `503` and the instance can no longer be claimed by anybody else.
 
 ## Troubleshooting
 
