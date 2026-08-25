@@ -46,12 +46,13 @@
         - env
         - labels
 
+    # With no state to enforce, this only reports - and a unit whose file is
+    # gone reports LoadState=not-found, which says more than `is-active` would:
+    # systemd no longer knows the unit at all.
     - name: Ask systemd about the Autobrr unit
-      ansible.builtin.command:
-        cmd: systemctl is-active autobrr.service
-      register: autobrr_is_active
-      changed_when: false
-      failed_when: false
+      ansible.builtin.systemd_service:
+        name: autobrr.service
+      register: autobrr_unit
 
     - name: Ask Docker about the Autobrr container
       ansible.builtin.command:
@@ -70,25 +71,25 @@
         that:
           - not autobrr_service_file.stat.exists
           - autobrr_support_files.results | rejectattr('stat.exists') | list | length == 2
-          - autobrr_is_active.stdout | trim in ['inactive', 'unknown', 'failed']
+          - autobrr_unit.status.LoadState == 'not-found'
           - autobrr_container.stdout | trim | length == 0
           - autobrr_network.stdout | trim | length == 0
         fail_msg: >-
           Something Autobrr installed is still here: service file
           {{ 'present' if autobrr_service_file.stat.exists else 'gone' }}, support files
           {{ autobrr_support_files.results | selectattr('stat.exists') | map(attribute='item') | list }},
-          unit {{ autobrr_is_active.stdout | trim }},
+          unit {{ autobrr_unit.status.LoadState }}/{{ autobrr_unit.status.ActiveState }},
           container "{{ autobrr_container.stdout | trim }}",
           network "{{ autobrr_network.stdout | trim }}"
         success_msg: >-
-          The systemd unit ({{ autobrr_is_active.stdout | trim }}), its service file, the
+          The systemd unit ({{ autobrr_unit.status.LoadState }}), its service file, the
           rendered env and labels files, the container and the container network are all
           gone
 
     - name: Show the Autobrr uninstallation summary
       ansible.builtin.debug:
         msg:
-          - "unit: {{ autobrr_is_active.stdout | trim }}"
+          - "unit: {{ autobrr_unit.status.LoadState }}/{{ autobrr_unit.status.ActiveState }}"
           - "service file: {{ 'present' if autobrr_service_file.stat.exists else 'gone' }}"
           - "container: {{ autobrr_container.stdout | trim | default('gone', true) }}"
           - "network: {{ autobrr_network.stdout | trim | default('gone', true) }}"
