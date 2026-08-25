@@ -445,9 +445,19 @@
     # default, which this scenario deliberately does not use - renders them with a
     # trailing `Z`, so an offset is TZ having reached the process rather than
     # merely the env file.
+    #
+    # The journal is read scoped to the invocation that is running now, because
+    # it also keeps every earlier start of the unit, and a check that accepted
+    # those would still pass after the timezone had been changed and the service
+    # restarted.
+    - name: Ask systemd which invocation of Autobrr is running
+      ansible.builtin.systemd_service:
+        name: autobrr.service
+      register: autobrr_invocation
+
     - name: Read Autobrr's own log lines out of the journal
       ansible.builtin.command:
-        cmd: journalctl --unit autobrr.service --no-pager --output cat
+        cmd: journalctl _SYSTEMD_INVOCATION_ID={{ autobrr_invocation.status.InvocationID }} --no-pager --output cat
       register: autobrr_journal
       changed_when: false
 
