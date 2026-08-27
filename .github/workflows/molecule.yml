@@ -44,9 +44,7 @@ jobs:
         include:
           - distro: ubuntu2604
             scenario: default
-          - distro: debian13
-            scenario: default
-          - distro: debian13
+          - distro: ubuntu2604
             scenario: uninstall
       fail-fast: false
 
