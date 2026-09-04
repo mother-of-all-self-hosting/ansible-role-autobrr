@@ -389,23 +389,15 @@
       register: autobrr_config
 
     # /api/config reports the version linked into the running binary and does no
-    # network I/O to work it out, so comparing it with the leaf variable Renovate
-    # bumps ties the process that is actually serving to the version the role
-    # claims to install. Autobrr carries the leading `v` its image tags do.
+    # network I/O to work it out.
     - name: Assert the running Autobrr is the version this role installs
       ansible.builtin.assert:
         that:
           - autobrr_config.json.version == autobrr_defaults.autobrr_version
           - (autobrr_container.Config.Image | split(':') | last) == autobrr_defaults.autobrr_version
           - autobrr_image.Config.Labels['org.opencontainers.image.version'] == autobrr_defaults.autobrr_version
-        fail_msg: >-
-          The running Autobrr reports {{ autobrr_config.json.version }} out of image
-          {{ autobrr_container.Config.Image }}
-          (labelled {{ autobrr_image.Config.Labels['org.opencontainers.image.version'] | default('none') }}),
-          but `autobrr_version` pins {{ autobrr_defaults.autobrr_version }}
-        success_msg: >-
-          The running Autobrr reports itself as {{ autobrr_config.json.version }}, out of an
-          image tagged and labelled the same, which is what `autobrr_version` pins
+        fail_msg: "Autobrr reports {{ autobrr_config.json.version | default('none') }}, expected {{ autobrr_defaults.autobrr_version }}"
+        success_msg: "Autobrr reports {{ autobrr_config.json.version }}"
 
     # ------------------------------------------------------------------
     # Configuration reaches the process, not just the files on disk
