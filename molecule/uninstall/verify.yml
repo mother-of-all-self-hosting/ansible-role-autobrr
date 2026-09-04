@@ -89,8 +89,8 @@
     - name: Show the Autobrr uninstallation summary
       ansible.builtin.debug:
         msg:
-          - "unit: {{ autobrr_unit.status.LoadState }}/{{ autobrr_unit.status.ActiveState }}"
-          - "service file: {{ 'present' if autobrr_service_file.stat.exists else 'gone' }}"
-          - "container: {{ autobrr_container.stdout | trim | default('gone', true) }}"
-          - "network: {{ autobrr_network.stdout | trim | default('gone', true) }}"
-          - "data kept: {{ autobrr_molecule_data_path }}/autobrr.db, {{ autobrr_database.stat.size }} bytes"
+          - "Autobrr systemd: {{ autobrr_unit.status.LoadState }}/{{ autobrr_unit.status.ActiveState }}"
+          - "Autobrr service file: {{ 'present' if autobrr_service_file.stat.exists else 'gone' }}"
+          - "Autobrr container: {{ autobrr_container.stdout | trim | default('gone', true) }}"
+          - "Autobrr network: {{ autobrr_network.stdout | trim | default('gone', true) }}"
+          - "Autobrr data kept: {{ autobrr_molecule_data_path }}/autobrr.db, {{ autobrr_database.stat.size }} bytes"

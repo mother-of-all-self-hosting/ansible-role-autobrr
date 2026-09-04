@@ -709,10 +709,10 @@
       ansible.builtin.debug:
         msg:
           - "Autobrr systemd: {{ autobrr_service.status.ActiveState }}, restarts {{ autobrr_restarts_after.status.NRestarts }}"
+          - "Autobrr version: {{ autobrr_config.json.version }} from {{ autobrr_container.Config.Image }}"
           - "Autobrr unconfigured image: port {{ autobrr_stock_config.json.port }}, log level {{ autobrr_stock_config.json.log_level }}, update checks {{ autobrr_stock_config.json.check_for_updates }}, claimable {{ autobrr_stock_onboard.status }}"
           - "Autobrr refusals: anonymous {{ autobrr_anonymous_filters.status }}, forged session {{ autobrr_forged_session.status }}, forged token {{ autobrr_forged_token.status }}, wrong password {{ autobrr_bad_login.status }}, invented path {{ autobrr_bogus_path.status }}"
           - "Autobrr onboarding: {{ autobrr_onboard_open.status }} before, {{ autobrr_onboard_closed.status }} after"
-          - "Autobrr version: {{ autobrr_config.json.version }} from {{ autobrr_container.Config.Image }}"
           - "Autobrr configuration: port {{ autobrr_config.json.port }}, log level {{ autobrr_config.json.log_level }}, update checks {{ autobrr_config.json.check_for_updates }}"
           - "Autobrr round trip: filter {{ autobrr_created_filter.json.id }}, read back {{ autobrr_read_filter.json.name }}, absent lookup {{ autobrr_absent_filter.status }}"
           - "Autobrr sqlite ({{ autobrr_molecule_data_path }}/autobrr.db): {{ autobrr_sqlite_facts }}"
