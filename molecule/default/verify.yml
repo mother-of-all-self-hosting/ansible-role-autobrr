@@ -81,7 +81,7 @@
     - name: Assert Autobrr reports itself ready
       ansible.builtin.assert:
         that: autobrr_readiness.content | trim == 'OK'
-        fail_msg: "Autobrr's readiness probe answered {{ autobrr_readiness.content | default('nothing') }}"
+        fail_msg: "Autobrr's readiness probe answered {{ autobrr_readiness.content | default('none') }}"
         success_msg: "Autobrr's readiness probe reaches its database and answers OK"
 
     - name: Read the Autobrr container the role created
@@ -402,7 +402,7 @@
         fail_msg: >-
           The running Autobrr reports {{ autobrr_config.json.version }} out of image
           {{ autobrr_container.Config.Image }}
-          (labelled {{ autobrr_image.Config.Labels['org.opencontainers.image.version'] | default('nothing') }}),
+          (labelled {{ autobrr_image.Config.Labels['org.opencontainers.image.version'] | default('none') }}),
           but `autobrr_version` pins {{ autobrr_defaults.autobrr_version }}
         success_msg: >-
           The running Autobrr reports itself as {{ autobrr_config.json.version }}, out of an
