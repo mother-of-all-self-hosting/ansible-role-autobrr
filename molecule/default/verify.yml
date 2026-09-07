@@ -83,7 +83,7 @@
         fail_msg: "Autobrr's readiness probe answered {{ autobrr_readiness.content | default('none') }}"
         success_msg: "Autobrr's readiness probe reaches its database and answers OK"
 
-    - name: Read the Autobrr container the role created
+    - name: Inspect Autobrr container
       ansible.builtin.command:
         cmd: "docker container inspect {{ autobrr_molecule_container }}"
       register: autobrr_container_raw
@@ -98,7 +98,7 @@
           role's container is not there to be read
         success_msg: "The role's {{ autobrr_molecule_container }} container is there"
 
-    - name: Make sense of the Autobrr container
+    - name: Parse the Autobrr container definition
       ansible.builtin.set_fact:
         autobrr_container: "{{ (autobrr_container_raw.stdout | from_json)[0] }}"
 
@@ -108,7 +108,7 @@
       register: autobrr_image_raw
       changed_when: false
 
-    - name: Make sense of the Autobrr image
+    - name: Parse the Autobrr image definition
       ansible.builtin.set_fact:
         autobrr_image: "{{ (autobrr_image_raw.stdout | from_json)[0] }}"
 
