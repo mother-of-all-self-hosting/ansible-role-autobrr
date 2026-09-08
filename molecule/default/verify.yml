@@ -131,9 +131,9 @@
     - name: Run the Autobrr image with none of the role's configuration
       ansible.builtin.command:
         cmd: >-
-          docker run --detach --rm
+          docker run -d --rm
           --name {{ autobrr_verify_stock_container }}
-          --publish 127.0.0.1:{{ autobrr_verify_stock_port }}:7474
+          -p 127.0.0.1:{{ autobrr_verify_stock_port }}:7474
           {{ autobrr_container.Config.Image }}
       changed_when: true
 
