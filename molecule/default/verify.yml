@@ -67,7 +67,7 @@
     - name: Retrieve the Autobrr systemd service log for debugging
       when: autobrr_debug_service_enabled | bool
       ansible.builtin.command:
-        cmd: journalctl -xeu autobrr.service
+        cmd: journalctl --no-pager --output=cat --unit=autobrr.service
       changed_when: false
 
     # `active` only says a docker client is running. Autobrr's readiness probe
