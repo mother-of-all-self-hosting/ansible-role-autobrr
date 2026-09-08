@@ -689,23 +689,23 @@
     - name: Sample the Autobrr restart counter again
       ansible.builtin.systemd_service:
         name: autobrr.service
-      register: autobrr_restarts_after
+      register: autobrr_service_after
 
     - name: Assert Autobrr did not restart while it was up
       ansible.builtin.assert:
-        that: autobrr_restarts_after.status.NRestarts == autobrr_restarts_before.status.NRestarts
+        that: autobrr_service_after.status.NRestarts == autobrr_restarts_before.status.NRestarts
         fail_msg: >-
           Autobrr restarted while it was supposedly up
           ({{ autobrr_restarts_before.status.NRestarts }} to
-          {{ autobrr_restarts_after.status.NRestarts }}), so `active` was hiding a crash loop
+          {{ autobrr_service_after.status.NRestarts }}), so `active` was hiding a crash loop
         success_msg: >-
           Autobrr did not restart over 45 seconds of watching
-          (restarts so far: {{ autobrr_restarts_after.status.NRestarts }})
+          (restarts so far: {{ autobrr_service_after.status.NRestarts }})
 
     - name: Show the Autobrr verification summary
       ansible.builtin.debug:
         msg:
-          - "Autobrr systemd: {{ autobrr_service.status.ActiveState }}, restarts {{ autobrr_restarts_after.status.NRestarts }}"
+          - "Autobrr systemd: {{ autobrr_service.status.ActiveState }}, {{ autobrr_service_after.status.NRestarts }} restart(s)"
           - "Autobrr version: {{ autobrr_config.json.version }} from {{ autobrr_container.Config.Image }}"
           - "Autobrr unconfigured image: port {{ autobrr_stock_config.json.port }}, log level {{ autobrr_stock_config.json.log_level }}, update checks {{ autobrr_stock_config.json.check_for_updates }}, claimable {{ autobrr_stock_onboard.status }}"
           - "Autobrr refusals: anonymous {{ autobrr_anonymous_filters.status }}, forged session {{ autobrr_forged_session.status }}, forged token {{ autobrr_forged_token.status }}, wrong password {{ autobrr_bad_login.status }}, invented path {{ autobrr_bogus_path.status }}"
