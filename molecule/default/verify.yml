@@ -32,6 +32,8 @@
     autobrr_verify_api_key_name: molecule-round-trip-key
 
   tasks:
+    - name: Verify that Autobrr works
+      block:
     # The role is not included in this playbook, so its defaults are not in
     # scope. Reading defaults/main.yml directly ties the version assertion
     # below.
@@ -713,3 +715,19 @@
           - "Autobrr configuration: port {{ autobrr_config.json.port }}, log level {{ autobrr_config.json.log_level }}, update checks {{ autobrr_config.json.check_for_updates }}"
           - "Autobrr round trip: filter {{ autobrr_created_filter.json.id }}, read back {{ autobrr_read_filter.json.name }}, absent lookup {{ autobrr_absent_filter.status }}"
           - "Autobrr sqlite ({{ autobrr_molecule_data_path }}/autobrr.db): {{ autobrr_sqlite_facts }}"
+
+      rescue:
+        # Whatever went wrong, the reason is almost always in the systemd service log.
+        - name: Retrieve the Autobrr systemd service log
+          ansible.builtin.command:
+            cmd: journalctl --no-pager --output=cat --unit=autobrr.service
+          register: autobrr_service_log
+          changed_when: false
+
+        - name: Show the Autobrr systemd service log
+          ansible.builtin.debug:
+            var: autobrr_service_log.stdout_lines
+
+        - name: Fail because verification did not pass
+          ansible.builtin.fail:
+            msg: "Autobrr verification failed. The systemd service log is printed above."
