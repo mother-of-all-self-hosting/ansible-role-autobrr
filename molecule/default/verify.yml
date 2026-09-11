@@ -31,6 +31,9 @@
 
     autobrr_verify_api_key_name: molecule-round-trip-key
 
+    autobrr_verify_units:
+      - autobrr.service
+
   tasks:
     - name: Verify that Autobrr works
       block:
@@ -46,13 +49,14 @@
         # The unit is up and Autobrr itself is ready
         # ------------------------------------------------------------------
 
-        - name: Wait for the Autobrr systemd service to become active (up to 180s)
+        - name: Wait for the Autobrr systemd services to become active (up to 180s each)
           ansible.builtin.systemd_service:
-            name: autobrr.service
-          register: autobrr_service
-          until: autobrr_service.status.ActiveState == 'active'
+            name: "{{ item }}"
+          register: autobrr_services
+          until: autobrr_services.status.ActiveState == 'active'
           retries: 36
           delay: 5
+          loop: "{{ autobrr_verify_units }}"
           # So that giving up is reported by the assertion below rather than as a
           # wall of systemd unit properties.
           failed_when: false
@@ -60,17 +64,20 @@
         # `Restart=always` in the systemd unit means that even a container which crashes
         # and gets restarted reads as active here, so this is a precondition rather than
         # a result.
-        - name: Assert the Autobrr systemd service is active
+        - name: Assert the Autobrr systemd services are active
           ansible.builtin.assert:
-            that: autobrr_service.status.ActiveState == 'active'
-            fail_msg: "autobrr.service is not active ({{ autobrr_service.status.ActiveState }})"
-            success_msg: "autobrr.service is active"
+            that: autobrr_services.results | map(attribute='status.ActiveState') | unique | list == ['active']
+            fail_msg: >-
+              Not every service is active:
+              {{ dict(autobrr_verify_units | zip(autobrr_services.results | map(attribute='status.ActiveState'))) }}
+            success_msg: "Every systemd service is active"
 
-        - name: Retrieve the Autobrr systemd service log for debugging
+        - name: Retrieve the Autobrr systemd services log for debugging
           when: autobrr_debug_service_enabled | bool
           ansible.builtin.command:
-            cmd: journalctl --no-pager --output=cat --unit=autobrr.service
+            cmd: "journalctl --no-pager --output=cat --unit={{ item }}"
           changed_when: false
+          loop: "{{ autobrr_verify_units }}"
 
         # `active` only says a docker client is running. Autobrr's readiness probe
         # pings its database, so this is the first answer that means the process
@@ -707,7 +714,7 @@
         - name: Show the Autobrr verification summary
           ansible.builtin.debug:
             msg:
-              - "Autobrr systemd: {{ autobrr_service.status.ActiveState }}, {{ autobrr_service_after.status.NRestarts }} restart(s)"
+              - "Autobrr systemd: {% for unit, state in autobrr_verify_units | zip(autobrr_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
               - "Autobrr version: {{ autobrr_config.json.version }} from {{ autobrr_container.Config.Image }}"
               - "Autobrr unconfigured image: port {{ autobrr_stock_config.json.port }}, log level {{ autobrr_stock_config.json.log_level }}, update checks {{ autobrr_stock_config.json.check_for_updates }}, claimable {{ autobrr_stock_onboard.status }}"
               - "Autobrr refusals: anonymous {{ autobrr_anonymous_filters.status }}, forged session {{ autobrr_forged_session.status }}, forged token {{ autobrr_forged_token.status }}, wrong password {{ autobrr_bad_login.status }}, invented path {{ autobrr_bogus_path.status }}"
