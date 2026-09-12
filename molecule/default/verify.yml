@@ -348,7 +348,7 @@
               - autobrr_onboard_closed.status == 503
             fail_msg: >-
               Onboarding did not behave as documented: open={{ autobrr_onboard_open.status }},
-              create={{ autobrr_onboard.json | default('no body') }},
+              create={{ autobrr_onboard.json | default('no response') }},
               afterwards={{ autobrr_onboard_closed.status }}
             success_msg: >-
               A freshly installed Autobrr accepts an unauthenticated onboarding call (204),
