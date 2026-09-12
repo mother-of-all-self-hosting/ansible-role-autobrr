@@ -82,21 +82,24 @@
         # `active` only says a docker client is running. Autobrr's readiness probe
         # pings its database, so this is the first answer that means the process
         # behind the unit has migrated its schema and opened its listener.
-        - name: Wait for Autobrr to report itself ready (up to 5m)
+        - name: Wait for Autobrr to report itself ready (up to 180s)
           ansible.builtin.uri:
             url: "{{ autobrr_verify_url }}/api/healthz/readiness"
             status_code: [200]
             return_content: true
           register: autobrr_readiness
           until: autobrr_readiness.status | default(0) == 200
-          retries: 60
+          retries: 36
           delay: 5
+          # So that giving up is reported by the assertion below rather than as a
+          # wall of systemd unit properties.
+          failed_when: false
 
         - name: Assert Autobrr reports itself ready
           ansible.builtin.assert:
             that: autobrr_readiness.content | trim == 'OK'
-            fail_msg: "Autobrr's readiness probe answered {{ autobrr_readiness.content | default('none') }}"
-            success_msg: "Autobrr's readiness probe reaches its database and answers OK"
+            fail_msg: "Autobrr did not report itself ready: {{ autobrr_readiness.content | default('no response') }}"
+            success_msg: "Autobrr reports itself ready"
 
         - name: Inspect Autobrr container
           ansible.builtin.command:
