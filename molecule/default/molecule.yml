@@ -68,7 +68,7 @@ provisioner:
         # Deliberately not the role's default of Etc/UTC. Autobrr timestamps its
         # own log lines in local time, so this becomes an observable difference
         # in the journal rather than a value that merely sits in a file.
-        autobrr_timezone: Europe/Sofia
+        autobrr_environment_variables_tz: Europe/Sofia
 
         # Passed through to the container verbatim by the role. Autobrr's own
         # defaults for both are the opposite (INFO, and update checks on), which

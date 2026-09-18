@@ -484,12 +484,12 @@
           ansible.builtin.assert:
             that:
               - autobrr_journal.stdout is search('"time":"[0-9T:.-]+\+0[23]:00"')
-              - autobrr_timezone != 'Etc/UTC'
+              - autobrr_environment_variables_tz != 'Etc/UTC'
             fail_msg: >-
-              Autobrr's log lines carry no {{ autobrr_timezone }} offset, so `autobrr_timezone`
+              Autobrr's log lines carry no {{ autobrr_environment_variables_tz }} offset, so `autobrr_environment_variables_tz`
               did not reach the process
             success_msg: >-
-              Autobrr timestamps its log lines with a {{ autobrr_timezone }} offset rather than
+              Autobrr timestamps its log lines with a {{ autobrr_environment_variables_tz }} offset rather than
               the trailing Z that the role's default of Etc/UTC would give
 
         # ------------------------------------------------------------------
