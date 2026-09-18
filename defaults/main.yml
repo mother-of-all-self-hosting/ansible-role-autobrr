@@ -42,11 +42,12 @@ autobrr_container_network: "{{ autobrr_identifier }}"
 # Control if the container network is deleted on uninstalling.
 autobrr_container_network_deletion_enabled: true
 
-# Controls whether the container exposes the HTTP port
-# Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:7474"), or empty string to not expose.
+# Specify how the container publishes its HTTP port (as defined by `autobrr_container_http_port`).
+#
+# Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
 autobrr_container_http_bind_port: ""
 
-# The port Autobrr listens on inside the container.
+# The port number in the container
 #
 # It is handed to Autobrr as `AUTOBRR__PORT` (see `../templates/env.j2`), which overrides
 # the `port` value in the config.toml that Autobrr generates for itself on first start.
@@ -56,27 +57,21 @@ autobrr_container_http_port: 7474
 
 # A list of additional container networks that the container would be connected to.
 # The role does not create these networks, so make sure they already exist.
+# Use this to expose this container to another reverse proxy, which runs in a different container network.
 autobrr_container_additional_networks: "{{ (autobrr_container_additional_networks_default + autobrr_container_additional_networks_auto + autobrr_container_additional_networks_custom) | unique }}"
 autobrr_container_additional_networks_default: []
 autobrr_container_additional_networks_auto: []
 autobrr_container_additional_networks_custom: []
 
 # A list of additional "volumes" to mount in the container.
-#
+# This list gets populated dynamically at runtime. You can provide a different default value,
+# if you wish to mount your own files into the container.
+# Contains definition objects like this: `{"type": "bind", "src": "/outside", "dst": "/inside", "options": "readonly"}.
 # See the `--mount` documentation for the `docker run` command.
-#
-# Example:
-# autobrr_container_additional_volumes:
-#   - type: bind
-#     src: /path/on/the/host
-#     dst: /data
-#   - type: bind
-#     src: /another-path/on/the/host
-#     dst: /read-only
-#     options: readonly
 autobrr_container_additional_volumes: []
 
-# To inject your own other container labels, see `autobrr_container_labels_additional_labels`.
+# autobrr_container_labels_traefik_enabled controls whether labels to assist a Traefik reverse-proxy will be attached to the container.
+# See `../templates/labels.j2` for details.
 autobrr_container_labels_traefik_enabled: true
 autobrr_container_labels_traefik_docker_network: "{{ autobrr_container_network }}"
 autobrr_container_labels_traefik_hostname: "{{ autobrr_hostname }}"
@@ -97,7 +92,7 @@ autobrr_container_labels_traefik_tls_certResolver: default  # noqa var-naming
 #   another.label="here"
 autobrr_container_labels_additional_labels: ""
 
-# A list of extra arguments to pass to the container
+# A list of extra arguments to pass to the container (`docker create` command)
 autobrr_container_extra_arguments: []
 
 # List of systemd services that the Autobrr systemd service depends on
@@ -143,15 +138,12 @@ autobrr_container_cleanup_command: |
   echo "Failed to remove stale container {{ autobrr_identifier }} after {{ autobrr_container_cleanup_timeout_seconds }} attempts" >&2;
   exit 1
 
+# Specify the timezone
 autobrr_timezone: "Etc/UTC"
+
 autobrr_arch: amd64
 
-# autobrr_environment_variables_additional_variables contains a multiline string with additional environment variables to pass to the container.
-#
-# Example:
-# autobrr_environment_variables_additional_variables: |
-#   VAR=1
-#   ANOTHER=value
+# Additional environment variables.
 autobrr_environment_variables_additional_variables: ""
 
 # autobrr_restart_necessary controls whether the Autobrr systemd
