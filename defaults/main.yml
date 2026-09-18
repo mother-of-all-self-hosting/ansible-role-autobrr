@@ -74,6 +74,8 @@ autobrr_container_additional_volumes_custom: []
 
 # autobrr_container_labels_traefik_enabled controls whether labels to assist a Traefik reverse-proxy will be attached to the container.
 # See `../templates/labels.j2` for details.
+#
+# To inject your own other container labels, see `autobrr_container_labels_additional_labels_custom`.
 autobrr_container_labels_traefik_enabled: true
 autobrr_container_labels_traefik_docker_network: "{{ autobrr_container_network }}"
 autobrr_container_labels_traefik_hostname: "{{ autobrr_hostname }}"
@@ -87,12 +89,15 @@ autobrr_container_labels_traefik_tls_certResolver: default  # noqa var-naming
 
 # autobrr_container_labels_additional_labels contains a multiline string with additional labels to add to the container label file.
 # See `../templates/labels.j2` for details.
+# To add your own custom labels, use `autobrr_container_labels_additional_labels_custom`
 #
 # Example:
-# autobrr_container_labels_additional_labels: |
-#   my.label=1
-#   another.label="here"
-autobrr_container_labels_additional_labels: ""
+# autobrr_container_labels_additional_labels_custom:
+#   - my.label=1
+#   - another.label="here"
+autobrr_container_labels_additional_labels: "{{ autobrr_container_labels_additional_labels_auto + autobrr_container_labels_additional_labels_custom }}"
+autobrr_container_labels_additional_labels_auto: []
+autobrr_container_labels_additional_labels_custom: []
 
 # A list of extra arguments to pass to the container (`docker create` command)
 autobrr_container_extra_arguments: []
