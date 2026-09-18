@@ -17,13 +17,11 @@ autobrr_identifier: autobrr
 autobrr_base_path: "/{{ autobrr_identifier }}"
 autobrr_data_path: "{{ autobrr_base_path }}/data"
 
-autobrr_uid: ""
-autobrr_gid: ""
-autobrr_timezone: "Etc/UTC"
-
 # renovate: datasource=docker depName=ghcr.io/autobrr/autobrr versioning=semver
 autobrr_version: v1.86.0
-autobrr_arch: amd64
+
+autobrr_uid: ""
+autobrr_gid: ""
 
 # The hostname at which Autobrr is served.
 autobrr_hostname: ""
@@ -44,24 +42,9 @@ autobrr_container_network: "{{ autobrr_identifier }}"
 # Control if the container network is deleted on uninstalling.
 autobrr_container_network_deletion_enabled: true
 
-# A list of additional container networks that the container would be connected to.
-# The role does not create these networks, so make sure they already exist.
-autobrr_container_additional_networks: "{{ (autobrr_container_additional_networks_default + autobrr_container_additional_networks_auto + autobrr_container_additional_networks_custom) | unique }}"
-autobrr_container_additional_networks_default: []
-autobrr_container_additional_networks_auto: []
-autobrr_container_additional_networks_custom: []
-
-# List of systemd services that the Autobrr systemd service depends on
-autobrr_systemd_required_services_list: "{{ (autobrr_systemd_required_services_list_default + autobrr_systemd_required_services_list_auto + autobrr_systemd_required_services_list_custom) | unique }}"
-autobrr_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
-autobrr_systemd_required_services_list_auto: []
-autobrr_systemd_required_services_list_custom: []
-
-# List of systemd services that the Autobrr systemd service wants
-autobrr_systemd_wanted_services_list: "{{ (autobrr_systemd_wanted_services_list_default + autobrr_systemd_wanted_services_list_auto + autobrr_systemd_wanted_services_list_custom) | unique }}"
-autobrr_systemd_wanted_services_list_default: []
-autobrr_systemd_wanted_services_list_auto: []
-autobrr_systemd_wanted_services_list_custom: []
+# Controls whether the container exposes the HTTP port
+# Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:7474"), or empty string to not expose.
+autobrr_container_http_bind_port: ""
 
 # The port Autobrr listens on inside the container.
 #
@@ -71,9 +54,27 @@ autobrr_systemd_wanted_services_list_custom: []
 # that the published port mapping and the Traefik service label point at.
 autobrr_container_http_port: 7474
 
-# Controls whether the container exposes the HTTP port
-# Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:7474"), or empty string to not expose.
-autobrr_container_http_bind_port: ""
+# A list of additional container networks that the container would be connected to.
+# The role does not create these networks, so make sure they already exist.
+autobrr_container_additional_networks: "{{ (autobrr_container_additional_networks_default + autobrr_container_additional_networks_auto + autobrr_container_additional_networks_custom) | unique }}"
+autobrr_container_additional_networks_default: []
+autobrr_container_additional_networks_auto: []
+autobrr_container_additional_networks_custom: []
+
+# A list of additional "volumes" to mount in the container.
+#
+# See the `--mount` documentation for the `docker run` command.
+#
+# Example:
+# autobrr_container_additional_volumes:
+#   - type: bind
+#     src: /path/on/the/host
+#     dst: /data
+#   - type: bind
+#     src: /another-path/on/the/host
+#     dst: /read-only
+#     options: readonly
+autobrr_container_additional_volumes: []
 
 # To inject your own other container labels, see `autobrr_container_labels_additional_labels`.
 autobrr_container_labels_traefik_enabled: true
@@ -96,31 +97,20 @@ autobrr_container_labels_traefik_tls_certResolver: default  # noqa var-naming
 #   another.label="here"
 autobrr_container_labels_additional_labels: ""
 
-# autobrr_environment_variables_additional_variables contains a multiline string with additional environment variables to pass to the container.
-#
-# Example:
-# autobrr_environment_variables_additional_variables: |
-#   VAR=1
-#   ANOTHER=value
-autobrr_environment_variables_additional_variables: ""
-
-# A list of additional "volumes" to mount in the container.
-#
-# See the `--mount` documentation for the `docker run` command.
-#
-# Example:
-# autobrr_container_additional_volumes:
-#   - type: bind
-#     src: /path/on/the/host
-#     dst: /data
-#   - type: bind
-#     src: /another-path/on/the/host
-#     dst: /read-only
-#     options: readonly
-autobrr_container_additional_volumes: []
-
 # A list of extra arguments to pass to the container
 autobrr_container_extra_arguments: []
+
+# List of systemd services that the Autobrr systemd service depends on
+autobrr_systemd_required_services_list: "{{ (autobrr_systemd_required_services_list_default + autobrr_systemd_required_services_list_auto + autobrr_systemd_required_services_list_custom) | unique }}"
+autobrr_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
+autobrr_systemd_required_services_list_auto: []
+autobrr_systemd_required_services_list_custom: []
+
+# List of systemd services that the Autobrr systemd service wants
+autobrr_systemd_wanted_services_list: "{{ (autobrr_systemd_wanted_services_list_default + autobrr_systemd_wanted_services_list_auto + autobrr_systemd_wanted_services_list_custom) | unique }}"
+autobrr_systemd_wanted_services_list_default: []
+autobrr_systemd_wanted_services_list_auto: []
+autobrr_systemd_wanted_services_list_custom: []
 
 # Controls how long to wait for the container to stop gracefully before killing it.
 autobrr_container_stop_grace_time_seconds: "{{ devture_systemd_docker_base_container_stop_grace_time_seconds }}"
@@ -152,6 +142,17 @@ autobrr_container_cleanup_command: |
   done;
   echo "Failed to remove stale container {{ autobrr_identifier }} after {{ autobrr_container_cleanup_timeout_seconds }} attempts" >&2;
   exit 1
+
+autobrr_timezone: "Etc/UTC"
+autobrr_arch: amd64
+
+# autobrr_environment_variables_additional_variables contains a multiline string with additional environment variables to pass to the container.
+#
+# Example:
+# autobrr_environment_variables_additional_variables: |
+#   VAR=1
+#   ANOTHER=value
+autobrr_environment_variables_additional_variables: ""
 
 # autobrr_restart_necessary controls whether the Autobrr systemd
 # service will be restarted (when true) or merely started (when false) by the
