@@ -26,6 +26,20 @@ traefik.http.middlewares.{{ autobrr_identifier }}-strip-prefix.stripprefix.prefi
 {% set middlewares = middlewares + [autobrr_identifier + '-strip-prefix'] %}
 {% endif %}
 
+{% if autobrr_container_labels_traefik_additional_request_headers.keys() | length > 0 %}
+{% for name, value in autobrr_container_labels_traefik_additional_request_headers.items() %}
+traefik.http.middlewares.{{ autobrr_identifier }}-add-request-headers.headers.customrequestheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [autobrr_identifier + '-add-request-headers'] %}
+{% endif %}
+
+{% if autobrr_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
+{% for name, value in autobrr_container_labels_traefik_additional_response_headers.items() %}
+traefik.http.middlewares.{{ autobrr_identifier }}-add-response-headers.headers.customresponseheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [autobrr_identifier + '-add-response-headers'] %}
+{% endif %}
+
 traefik.http.routers.{{ autobrr_identifier }}.rule={{ autobrr_container_labels_traefik_rule }}
 {% if autobrr_container_labels_traefik_priority | int > 0 %}
 traefik.http.routers.{{ autobrr_identifier }}.priority={{ autobrr_container_labels_traefik_priority }}
