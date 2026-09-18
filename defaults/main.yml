@@ -100,7 +100,9 @@ autobrr_container_labels_additional_labels_auto: []
 autobrr_container_labels_additional_labels_custom: []
 
 # A list of extra arguments to pass to the container (`docker create` command)
-autobrr_container_extra_arguments: []
+autobrr_container_extra_arguments: "{{ autobrr_container_extra_arguments_auto + autobrr_container_extra_arguments_custom }}"
+autobrr_container_extra_arguments_auto: []
+autobrr_container_extra_arguments_custom: []
 
 # List of systemd services that the Autobrr systemd service depends on
 autobrr_systemd_required_services_list: "{{ (autobrr_systemd_required_services_list_default + autobrr_systemd_required_services_list_auto + autobrr_systemd_required_services_list_custom) | unique }}"
