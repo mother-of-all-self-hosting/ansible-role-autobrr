@@ -28,8 +28,8 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --cap-drop=ALL \
       --read-only \
       --network={{ autobrr_container_network }} \
-      {% if autobrr_container_http_bind_port %}
-      -p {{ autobrr_container_http_bind_port }}:{{ autobrr_container_http_port }} \
+      {% if autobrr_container_http_host_bind_port %}
+      -p {{ autobrr_container_http_host_bind_port }}:{{ autobrr_container_http_port }} \
       {% endif %}
       --env-file={{ autobrr_base_path }}/env \
       --label-file={{ autobrr_base_path }}/labels \

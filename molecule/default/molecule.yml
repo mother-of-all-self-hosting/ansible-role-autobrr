@@ -63,7 +63,7 @@ provisioner:
         # says otherwise - so an Autobrr answering here at all is evidence that
         # the env file reached the process.
         autobrr_container_http_port: 7654
-        autobrr_container_http_bind_port: 127.0.0.1:7654
+        autobrr_container_http_host_bind_port: 127.0.0.1:7654
 
         # Deliberately not the role's default of Etc/UTC. Autobrr timestamps its
         # own log lines in local time, so this becomes an observable difference
