@@ -76,7 +76,11 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 ## Usage
 
-After running the command for installation, Autobrr becomes available at the specified hostname like `https://example.com`. To use it, open the URL on the browser and create an account.
+After running the command for installation, Autobrr becomes available at the specified hostname like `https://example.com`.
+
+To get started, open the URL with a web browser, and register the account.
+
+![Autobrr Create Account](./assets/setup-1.webp)
 
 ### Create the first account promptly
 
