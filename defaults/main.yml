@@ -17,7 +17,7 @@ autobrr_base_path: "/{{ autobrr_identifier }}"
 autobrr_data_path: "{{ autobrr_base_path }}/data"
 
 # renovate: datasource=docker depName=ghcr.io/autobrr/autobrr versioning=semver
-autobrr_version: v1.86.0
+autobrr_version: v1.87.0
 
 autobrr_uid: ""
 autobrr_gid: ""
