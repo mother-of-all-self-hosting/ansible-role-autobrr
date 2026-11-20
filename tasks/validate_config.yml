@@ -24,7 +24,6 @@
   with_items:
     - autobrr_uid
     - autobrr_gid
-    - autobrr_hostname
 
 - name: Fail if Autobrr architecture is not supported
   ansible.builtin.fail:
