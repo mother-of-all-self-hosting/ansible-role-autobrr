@@ -574,7 +574,7 @@
             body_format: json
             body:
               name: "{{ autobrr_verify_api_key_name }}"
-              scopes: []
+              scopes: ["filters:read"]
             status_code: [201]
           register: autobrr_created_key
 
