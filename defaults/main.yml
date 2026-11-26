@@ -232,6 +232,10 @@ autobrr_arch: amd64
 
 autobrr_environment_variables_autobrr_base_url: "{{ autobrr_path_prefix }}/" # Mind the slash
 
+# Specify log level
+# Valid values: ERROR, DEBUG, INFO, WARN, TRACE
+autobrr_environment_variables_autobrr_log_level: INFO
+
 # Additional environment variables.
 autobrr_environment_variables_additional_variables: ""
 

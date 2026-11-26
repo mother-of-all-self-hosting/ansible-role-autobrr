@@ -106,3 +106,11 @@ The program reads the password from standard input (twice, as a confirmation).
 ### Check the service's logs
 
 You can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu autobrr` (or how you/your playbook named the service, e.g. `mash-autobrr`).
+
+#### Increase logging verbosity
+
+If you want to increase the verbosity, add the following configuration to your `vars.yml` file:
+
+```yaml
+autobrr_environment_variables_autobrr_log_level: DEBUG
+```
