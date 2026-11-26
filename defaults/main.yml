@@ -22,6 +22,9 @@ autobrr_version: v1.91.1
 autobrr_uid: ""
 autobrr_gid: ""
 
+# The scheme used for serving Autobrr.
+autobrr_scheme: https
+
 # The hostname at which Autobrr is served.
 autobrr_hostname: ""
 
@@ -226,6 +229,8 @@ autobrr_container_cleanup_command: |
 autobrr_environment_variables_tz: "Etc/UTC"
 
 autobrr_arch: amd64
+
+autobrr_environment_variables_autobrr_base_url: "{{ autobrr_path_prefix }}/" # Mind the slash
 
 # Additional environment variables.
 autobrr_environment_variables_additional_variables: ""
