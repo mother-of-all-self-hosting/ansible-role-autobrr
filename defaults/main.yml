@@ -225,6 +225,42 @@ autobrr_container_cleanup_command: |
   echo "Failed to remove stale container {{ autobrr_identifier }} after {{ autobrr_container_cleanup_timeout_seconds }} attempts" >&2;
   exit 1
 
+########################################################################
+#                                                                      #
+# database                                                             #
+#                                                                      #
+########################################################################
+
+# Specify a database driver to use
+# Valid values: postgres, sqlite
+autobrr_database_type: ""
+
+# Specify database configuration
+autobrr_database_hostname: ""
+autobrr_database_port: 5432
+autobrr_database_username: autobrr
+autobrr_database_password: ""
+# Specify SSL mode for Postgres database server
+# By default, we expect a local container (without SSL), so attempting SSL connections is not necessary.
+# Valid values: see https://www.postgresql.org/docs/11/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS
+autobrr_database_sslmode: disable
+autobrr_database_name: autobrr
+
+# Control if the database connection to Postgres is made via a Unix socket
+autobrr_database_socket_enabled: true
+
+# Specify the path to the Postgres Unix socket path inside the ChiefOnboarding container
+autobrr_database_socket_path_container: /run-postgres
+
+# Specify the path to the Postgres Unix socket path on the host (bind-mount source)
+autobrr_database_socket_path_host: ""
+
+########################################################################
+#                                                                      #
+# /database                                                            #
+#                                                                      #
+########################################################################
+
 # Specify the timezone
 autobrr_environment_variables_tz: "Etc/UTC"
 

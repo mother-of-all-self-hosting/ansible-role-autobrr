@@ -1,5 +1,8 @@
-# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2023 Julian-Samuel Gebühr
+# SPDX-FileCopyrightText: 2023 MASH project contributors
+# SPDX-FileCopyrightText: 2023-2025 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2025 spatterlight
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -31,6 +34,41 @@
       Your configuration specifies a CPU architecture (`{{ autobrr_arch }}`) which is not currently supported.
       This Autobrr role also does not support self-building yet, so it's not possible to make use of it.
   when: "autobrr_arch not in ['amd64', 'arm64']"
+
+- name: Fail if Autobrr database type is invalid
+  ansible.builtin.fail:
+    msg: >-
+      autobrr_database_type must be 'postgres' or 'sqlite'.
+  when: "autobrr_database_type not in ['postgres', 'sqlite']"
+
+- name: Run if Autobrr + Postgres integration is enabled
+  when: autobrr_database_type == 'postgres'
+  block:
+    - name: Fail if required Autobrr + Postgres integration settings not defined
+      ansible.builtin.fail:
+        msg: >-
+          You need to define a required configuration setting (`{{ item }}`) when `autobrr_database_type` is `postgres`
+      when: "lookup('vars', item, default='') | string | length == 0"
+      with_items:
+        - autobrr_database_password
+
+    - name: Fail if Postgres socket host path for Autobrr is missing when Unix socket is enabled
+      ansible.builtin.fail:
+        msg: >-
+          You need to define `autobrr_database_socket_path_host` when `autobrr_database_type` is `postgres`
+          and `autobrr_database_socket_enabled` is `true`.
+      when: >-
+        autobrr_database_socket_enabled and
+        autobrr_database_socket_path_host | string | length == 0
+
+    - name: Fail if Postgres hostname for Autobrr is missing when Unix socket is disabled
+      ansible.builtin.fail:
+        msg: >-
+          You need to define `autobrr_database_hostname` when `autobrr_database_type` is `postgres`
+          and `autobrr_database_socket_enabled` is `false`.
+      when: >-
+        not autobrr_database_socket_enabled and
+        autobrr_database_hostname | string | length == 0
 
 - name: Validate Autobrr Traefik configuration
   when: autobrr_container_labels_traefik_enabled | bool

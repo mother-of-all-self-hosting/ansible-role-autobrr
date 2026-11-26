@@ -62,6 +62,7 @@ provisioner:
         autobrr_uid: 1000
         autobrr_gid: 1000
         autobrr_hostname: localhost
+        autobrr_database_type: sqlite
         autobrr_container_labels_traefik_enabled: false
 
         # Deliberately not Autobrr's own default of 7474. Autobrr takes its

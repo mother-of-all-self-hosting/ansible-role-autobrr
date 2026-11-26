@@ -48,6 +48,7 @@ provisioner:
         autobrr_uid: 1000
         autobrr_gid: 1000
         autobrr_hostname: localhost
+        autobrr_database_type: sqlite
         autobrr_container_labels_traefik_enabled: false
         autobrr_container_http_port: 7654
         autobrr_container_http_host_bind_port: 127.0.0.1:7654

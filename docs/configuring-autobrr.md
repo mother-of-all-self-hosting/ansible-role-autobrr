@@ -56,6 +56,43 @@ autobrr_hostname: "example.com"
 
 After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
 
+### Configuring database
+
+#### Specify database
+
+Autobrr can use either Postgres or SQLite, and you need to choose one.
+
+To use Postgres, add the following configuration to your `vars.yml` file:
+
+```yaml
+autobrr_database_type: postgres
+```
+
+Set `sqlite` to use SQLite. The SQLite database is stored in the directory specified with `autobrr_config_path`.
+
+For other settings, check variables such as `autobrr_database_*` on [`defaults/main.yml`](../defaults/main.yml).
+
+#### Configuring connection to the database server (optional)
+
+By default the role is configured to establish connection with the Postgres server via the Unix socket. You can mount the Unix socket by adding the following configuration to your `vars.yml` file:
+
+```yaml
+# Specify the path to the Postgres Unix socket path on the host (bind-mount source)
+autobrr_database_socket_path_host: ""
+```
+
+Setting it enables to connect to the Postgres server via Unix socket mounted in the container at `/run-postgres/.s.PGSQL.5432`.
+
+If TCP connection is preferred, connection via the Unix socket can be disabled by adding the following configuration to your `vars.yml` file:
+
+```yaml
+# Disable the connection to Postgres server via a Unix socket
+autobrr_database_socket_enabled: false
+
+autobrr_database_hostname: YOUR_POSTGRES_SERVER_HOSTNAME_HERE
+autobrr_database_port: 5432
+```
+
 ### Extending the configuration
 
 There are some additional things you may wish to configure about the service.
