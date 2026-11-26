@@ -8,9 +8,16 @@ SPDX-FileCopyrightText: 2020-2026 Slavi Pantaleev
 SPDX-FileCopyrightText: 2022 François Darveau
 SPDX-FileCopyrightText: 2022 Julian Foad
 SPDX-FileCopyrightText: 2022 Warren Bailey
+SPDX-FileCopyrightText: 2023 Alejandro AR
 SPDX-FileCopyrightText: 2023 Antonis Christofides
 SPDX-FileCopyrightText: 2023 Felix Stupp
+SPDX-FileCopyrightText: 2023 Gergely Horváth
+SPDX-FileCopyrightText: 2023 Julian-Samuel Gebühr
 SPDX-FileCopyrightText: 2023 Pierre 'McFly' Marty
+SPDX-FileCopyrightText: 2023, 2024 MASH project contributors
+SPDX-FileCopyrightText: 2024 Philipp Homann
+SPDX-FileCopyrightText: 2024 Sergio Durigan Junior
+SPDX-FileCopyrightText: 2024 Thomas Miceli
 SPDX-FileCopyrightText: 2024-2026 Suguru Hirahara
 
 SPDX-License-Identifier: AGPL-3.0-or-later
@@ -91,6 +98,20 @@ autobrr_database_socket_enabled: false
 
 autobrr_database_hostname: YOUR_POSTGRES_SERVER_HOSTNAME_HERE
 autobrr_database_port: 5432
+```
+
+### Configuring trusted reverse proxies (optional)
+
+Autobrr determines the actual client IP address from `X-Forwarded-For` / `X-Real-IP` headers only if the request comes from a trusted reverse proxy (refer to [this section](https://autobrr.com/configuration/authentication#trusted-proxies) on the official documentation).
+
+Since this role typically runs Autobrr behind a reverse proxy (e.g. Traefik) on a container network, it trusts the loopback and all private (RFC1918) address ranges by default.
+
+To adjust the list of trusted proxies, add the following configuration to your `vars.yml` file (adapt to your needs):
+
+```yaml
+autobrr_environment_variables_autobrr_trusted_proxies:
+  - 127.0.0.0/8
+  - ::1/128
 ```
 
 ### Extending the configuration

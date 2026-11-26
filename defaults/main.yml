@@ -268,6 +268,17 @@ autobrr_arch: amd64
 
 autobrr_environment_variables_autobrr_base_url: "{{ autobrr_path_prefix }}/" # Mind the slash
 
+# Specify a comma-separated list of trusted proxy addresses
+#
+# The default below trusts the loopback and all private (RFC1918) address ranges,
+# which covers reverse proxies (e.g. Traefik) reaching Autobrr over a local container network.
+autobrr_environment_variables_autobrr_trusted_proxies:
+  - 127.0.0.0/8
+  - ::1/128
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16
+
 # Specify log level
 # Valid values: ERROR, DEBUG, INFO, WARN, TRACE
 autobrr_environment_variables_autobrr_log_level: INFO
